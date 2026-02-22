@@ -1,0 +1,6 @@
+According to the textbook, what four useful requirements are imposed on a distributed system to make it dependable? Retrieve the relevant context before answering.
+
+Answer is in textbook --> 
+    + Chapter 8.1 inroduction to fualt tolerance
+    + Textbook page 426
+    + PDF Page 440

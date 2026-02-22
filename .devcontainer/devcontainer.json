@@ -1,0 +1,37 @@
+{
+  "name": "csci5105",
+  "image": "python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {},
+    "ghcr.io/devcontainers/features/rust:1": {}
+  },
+  //"postCreateCommand": "apt-get update && apt-get install -y --no-install-recommends build-essential && pip install -U pip setuptools wheel && pip install --root-user-action=ignore -r requirements.txt",
+  "postCreateCommand": "python -m pip install --root-user-action=ignore -r requirements.txt",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.analysis.typeCheckingMode": "basic"
+      },
+      "python.analysis.extraPaths": [
+        "/workspaces/project_1/gRPC_KVS/src"
+      ],
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "VisualStudioExptTeam.VSGitHubCopilot",
+        "DrBlury.protobuf-vsc",
+        "bierner.markdown-mermaid"
+      ]
+    }
+  },
+  "containerEnv": {
+    /* Add the generated src folder to the python path so we can discover it like a module in the other python files */
+    "PYTHONPATH": "$PYTHONPATH:/workspaces/project_1/gRPC_KVS/src/kvstore",
+
+    /* Key-Value Store gRPC env variables */
+    "KVSTORE_HOST" : "localhost",
+    "KVSTORE_PORT" : "50051"
+  }
+}

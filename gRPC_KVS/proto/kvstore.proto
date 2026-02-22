@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package csci5105.kvstore;
+
+service KeyValueStore {
+  rpc Put(PutRequest) returns (PutResponse);
+  rpc StreamEmbeddings(StreamEmbeddingsRequest) returns (stream EmbeddingEntry);
+
+  rpc GetText(GetTextRequest) returns (GetTextResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+  rpc List(ListRequest) returns (ListResponse);
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+message PutRequest {
+  string key            = 1;
+  string textbook_chunk = 2;
+  bytes  embedding      = 3;
+}
+
+message PutResponse {
+  bool overwritten = 1;
+}
+
+message StreamEmbeddingsRequest {}
+
+message EmbeddingEntry {
+  string key       = 1;
+  bytes  embedding = 2;
+}
+
+message GetTextRequest {
+  string key = 1;
+}
+
+message GetTextResponse {
+  bool   found          = 1;
+  string textbook_chunk = 2;
+}
+
+message DeleteRequest {
+  string key = 1;
+}
+
+message DeleteResponse {
+  bool deleted = 1;
+}
+
+message ListRequest {}
+
+message ListResponse {
+  repeated string keys = 1;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string server_name    = 1;
+  string server_version = 2;
+  uint64 key_count      = 3;
+}

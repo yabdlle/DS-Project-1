@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "csci5105-rag-poc": {
+      "command": "python",
+      "args": ["${workspaceFolder}/mcp_server/mcp_server.py"]
+    }
+  }
+}
