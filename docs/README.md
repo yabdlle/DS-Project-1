@@ -97,6 +97,8 @@ We implemented the four missing RPC handlers:
 
 We implemented `get_text_from_keys`, which takes the list of keys identified by the MCP server's local embedding search and calls `GetText` on each one to fetch the corresponding text chunks to return as context.
 
+There is not much deep nuance worth mentioning in this function's implementation. It uses a single connection and creates a single stub object to handle all of the `GetText` RPC calls, rather than creating a new stub for every key. The `GetText` calls are made sequentially, and by default these are blocking calls. In the prototyping/development environment where the KV store and the MCP server are on the same machine, network latency is negligble, so there is no big issue with the additive time costs resulting from this simple method. In a production environment, however, it would likely make sense to bundle the `GetText` calls together in some way or to dispatch the calls in a non-blocking manner via python `asyncio` in order to eliminate the long chain of sequential RPC calls.
+
 ---
 
 ## 4. Design Choices
@@ -104,3 +106,6 @@ We implemented `get_text_from_keys`, which takes the list of keys identified by 
 **Single `RLock` over both dicts.** We used one lock to protect both `textbook_chunks` and `embeddings` rather than giving each its own lock. Some operations touch both dicts together (like `Put` and `Delete`), so two separate locks would risk acquiring them in different orders across handlers. We went with `RLock` over a plain `Lock` as a precaution since it lets the same thread re-acquire without deadlocking, which is useful if helper methods ever get called from within a locked section.
 
 **Snapshot before streaming.** `StreamEmbeddings` snapshots the embeddings dict while holding the lock and then yields entries after releasing it. The alternative would be holding the lock for the entire stream, which could block writes for a long time if there are a lot of entries.
+
+**Simple, sequential `get_text_from_keys()` implementation**
+For the sake of simplicty, `get_text_from_keys()` makes the `GetText` calls sequentially, and by default these calls are blocking. In the prototyping/development environment where the KV store and the MCP server are on the same machine, network latency is negligble, so there is no big issue with the additive time costs resulting from this simple method. In a production environment, however, it would likely make sense to bundle the `GetText` calls together in some way or to dispatch the calls in a non-blocking manner via python `asyncio` in order to eliminate the long chain of sequential RPC calls. However, for the time being the simple `for` loop of blocking RPC calls was used. This could be improved at the cost of an increase in complexity at a later point once need is demonstrated.
