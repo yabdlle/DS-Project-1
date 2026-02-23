@@ -7,7 +7,8 @@
     "ghcr.io/devcontainers/features/rust:1": {}
   },
   //"postCreateCommand": "apt-get update && apt-get install -y --no-install-recommends build-essential && pip install -U pip setuptools wheel && pip install --root-user-action=ignore -r requirements.txt",
-  "postCreateCommand": "python -m pip install --root-user-action=ignore -r requirements.txt",
+  // "postCreateCommand": "python -m pip install --root-user-action=ignore -r requirements.txt",
+  "postCreateCommand": "python -m pip install --root-user-action=ignore uv && python -m uv pip install --system -r requirements.txt",
   "customizations": {
     "vscode": {
       "settings": {
@@ -29,6 +30,7 @@
   "containerEnv": {
     /* Add the generated src folder to the python path so we can discover it like a module in the other python files */
     "PYTHONPATH": "$PYTHONPATH:/workspaces/project_1/gRPC_KVS/src/kvstore",
+    // "PYTHONPATH": "$PYTHONPATH:/workspaces/DS-Project-1/gRPC_KVS/src/kvstore",
 
     /* Key-Value Store gRPC env variables */
     "KVSTORE_HOST" : "localhost",
