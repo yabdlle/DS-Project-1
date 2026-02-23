@@ -41,20 +41,31 @@
 
 ---
 
-2. Running the Tests
-Make sure the server is running first, then from the project root:
-bashpython tests/test_rpc.py
-If all tests pass, the output will look like this:
-PASSED: Put
-PASSED: GetText
-PASSED: Delete
-PASSED: List
-PASSED: Health
-PASSED: StreamEmbeddings
+## 2. Running the Tests
 
-ALL TESTS PASSED
-No external framework needed — plain Python with a gRPC stub.
-We have a dedicated test function for each RPC: Put, GetText, Delete, List, Health, and StreamEmbeddings. Each test pre-deletes the keys it uses so a leftover kvstore.pkl from a prior session won't cause false failures. Beyond the happy path we also cover things like overwriting an existing key, deleting a key that was never inserted, double deletes, re-inserting after deletion, and verifying key_count stays accurate across puts and deletes.
+Make sure the server is running first, then from the project root:
+
+```bash
+python tests/test_rpc.py
+```
+
+Each test function prints `PASSED: <RPC>` when it succeeds. No external test framework was used.
+
+If all tests pass, the output will look like this:
+
+    PASSED: Put
+    PASSED: GetText
+    PASSED: Delete
+    PASSED: List
+    PASSED: Health
+    PASSED: StreamEmbeddings
+
+    ALL TESTS PASSED
+
+We test all five RPCs: `Put`, `GetText`, `Delete`, `List`, and `Health`. Each test cleans up its own keys before running so a leftover `kvstore.pkl` from a previous session won't cause false failures. We covered the non-obvious cases too, not just the happy path, things like overwriting an existing key, deleting a key that was never inserted, calling delete twice on the same key, putting a key back after deleting it, and making sure `key_count` in `Health` stays accurate across puts and deletes.
+
+
+Each RPC is tested independently using a Python gRPC client stub connected to a running server instance. The tests verify both return values and the resulting internal state of the store. This ensures that RPC responses are correct and that state transitions (inserts, deletes, overwrites) behave as expected.
 
 ---
 
@@ -93,5 +104,3 @@ We implemented `get_text_from_keys`, which takes the list of keys identified by 
 **Single `RLock` over both dicts.** We used one lock to protect both `textbook_chunks` and `embeddings` rather than giving each its own lock. Some operations touch both dicts together (like `Put` and `Delete`), so two separate locks would risk acquiring them in different orders across handlers. We went with `RLock` over a plain `Lock` as a precaution since it lets the same thread re-acquire without deadlocking, which is useful if helper methods ever get called from within a locked section.
 
 **Snapshot before streaming.** `StreamEmbeddings` snapshots the embeddings dict while holding the lock and then yields entries after releasing it. The alternative would be holding the lock for the entire stream, which could block writes for a long time if there are a lot of entries.
-
-**Pickle persistence.** The server serializes both dicts to `kvstore.pkl` on shutdown via `SIGINT` and reloads them on startup. This means you don't have to re-run ingestion every time you restart the server, which was mainly useful during development.
