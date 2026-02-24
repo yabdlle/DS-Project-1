@@ -57,19 +57,15 @@ def build_index():
     log(f"build_index() complete... {len(KEYS)} embeddings found\n")
 
 
-# TODO: Student's implement this function
 def get_text_from_keys(keys : list[str]) -> list[str]:
     text_out = []
 
-    # DONE: Comment out the line below and insteasd use the GetText message from gRPC to get the text for the key
-    # text_out = [DEFAULT_MCP_STRING] * len(keys)
-
     # TODO: error-handle?
-    log(f"[INFO] [mcp_server.py/get_test_from_keys()] called with {len(keys)} keys")
+    log(f"[INFO] [mcp_server.py/get_text_from_keys()] called with {len(keys)} keys")
     n_found = 0
     with grpc.insecure_channel(KV_ADDR) as ch:
         stub = kvstore_pb2_grpc.KeyValueStoreStub(ch)
-        log(f"[INFO] [mcp_server.py/get_test_from_keys()] created stub")
+        log(f"[INFO] [mcp_server.py/get_text_from_keys()] created stub")
         for k in keys:
             req = kvstore_pb2.GetTextRequest(key=k)
             resp = stub.GetText(req)
@@ -78,8 +74,8 @@ def get_text_from_keys(keys : list[str]) -> list[str]:
                 n_found += 1
             else:
                 text_out.append("") # TODO: determine if we want empty entries
-                log(f"[WARNING] [mcp_server.py/get_test_from_keys()] did not find text chunk for key '{k}'")
-    log(f"[INFO] [mcp_server.py/get_test_from_keys()] found {n_found}/{len(keys)} keys")
+                log(f"[WARNING] [mcp_server.py/get_text_from_keys()] did not find text chunk for key '{k}'")
+    log(f"[INFO] [mcp_server.py/get_text_from_keys()] found {n_found}/{len(keys)} keys")
 
     return text_out
 

@@ -53,6 +53,7 @@ Each test function prints `PASSED: <RPC>` when it succeeds. No external test fra
 
 If all tests pass, the output will look like this:
 
+```
     PASSED: Put
     PASSED: GetText
     PASSED: Delete
@@ -61,11 +62,31 @@ If all tests pass, the output will look like this:
     PASSED: StreamEmbeddings
 
     ALL TESTS PASSED
+```
 
 We test all five RPCs: `Put`, `GetText`, `Delete`, `List`, and `Health`. Each test cleans up its own keys before running so a leftover `kvstore.pkl` from a previous session won't cause false failures. We covered the non-obvious cases too, not just the happy path, things like overwriting an existing key, deleting a key that was never inserted, calling delete twice on the same key, putting a key back after deleting it, and making sure `key_count` in `Health` stays accurate across puts and deletes.
 
 
 Each RPC is tested independently using a Python gRPC client stub connected to a running server instance. The tests verify both return values and the resulting internal state of the store. This ensures that RPC responses are correct and that state transitions (inserts, deletes, overwrites) behave as expected.
+
+Additionally, to test the mcp server (specifically the `get_text_from_keys()` function, ensure the server is running and that the ingestion pipeline has been run (via `cd ingestion && python ingestion_client.py`), then from the project root run:
+```bash
+python tests/test_mcp_server.py 
+```
+
+If tests pass, the output should look like:
+```
+TESTING: get_text_from_keys()
+    TESTING: check_recall()
+    PASSED: check_recall()
+    TESTING: check_ordering()
+    PASSED: check_ordering()
+    TESTING: check_not_found()
+    PASSED: check_not_found()
+PASSED: get_text_from_keys()
+
+ALL TESTS PASSED
+```
 
 ---
 
@@ -107,5 +128,5 @@ There is not much deep nuance worth mentioning in this function's implementation
 
 **Snapshot before streaming.** `StreamEmbeddings` snapshots the embeddings dict while holding the lock and then yields entries after releasing it. The alternative would be holding the lock for the entire stream, which could block writes for a long time if there are a lot of entries.
 
-**Simple, sequential `get_text_from_keys()` implementation**
-For the sake of simplicty, `get_text_from_keys()` makes the `GetText` calls sequentially, and by default these calls are blocking. In the prototyping/development environment where the KV store and the MCP server are on the same machine, network latency is negligble, so there is no big issue with the additive time costs resulting from this simple method. In a production environment, however, it would likely make sense to bundle the `GetText` calls together in some way or to dispatch the calls in a non-blocking manner via python `asyncio` in order to eliminate the long chain of sequential RPC calls. However, for the time being the simple `for` loop of blocking RPC calls was used. This could be improved at the cost of an increase in complexity at a later point once need is demonstrated.
+**Sequential `get_text_from_keys()` implementation.**
+For the sake of simplicity, `get_text_from_keys()` makes the `GetText` calls sequentially, and by default these calls are blocking. In the prototyping/development environment where the KV store and the MCP server are on the same machine, network latency is negligble, so there is no big issue with the additive time costs resulting from this simple method. In a production environment, however, it would likely make sense to bundle the `GetText` calls together in some way or to dispatch the calls in a non-blocking manner via python `asyncio` in order to eliminate the long chain of sequential RPC calls. For the time being, however, the simple `for` loop of blocking RPC calls is sufficient. This could be improved at the cost of an increase in complexity at a later point once need is demonstrated.
